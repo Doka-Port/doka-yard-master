@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 
 from backend.database import get_session
 from backend.models.db_models import AllocationLog, Container
@@ -90,7 +91,11 @@ async def _allocate_single(
         computation_ms=result.computation_ms,
     )
     session.add(log_entry)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(status_code=400, detail=f"Container {req.container_id} já existe no banco de dados.")
 
     # Atualizar cache
     yard.place_container(container, result.bay, result.row, result.tier)

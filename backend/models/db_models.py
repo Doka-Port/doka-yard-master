@@ -17,6 +17,7 @@ class Block(Base):
     num_bays = Column(Integer, nullable=False)
     num_rows = Column(Integer, nullable=False)
     max_tiers = Column(Integer, nullable=False)
+    reefer_bays = Column(JSON, nullable=True)  # list of {bay, row} with reefer outlets
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     is_active = Column(Boolean, default=True)
 
@@ -33,6 +34,8 @@ class Container(Base):
     weight_kg = Column(Integer, nullable=False)
     departure_time = Column(DateTime(timezone=True), nullable=False)
     flow_type = Column(String(10), nullable=False)
+    is_reefer = Column(Boolean, default=False)
+    imo_class = Column(String(5), nullable=True)
     bay = Column(Integer)
     row = Column(Integer)
     tier = Column(Integer)

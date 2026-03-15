@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { YardScene } from './components/YardScene'
 import { ControlPanel } from './components/ControlPanel'
 import { PSOVisualizer } from './components/PSOVisualizer'
+import { TimelineSlider } from './components/TimelineSlider'
+import { MiniMap } from './components/MiniMap'
+import { AnalyticsSidebar } from './components/AnalyticsSidebar'
 import { useYard } from './hooks/useYard'
 import type { Container3D, PSOIterationData } from './types/api'
 import dokaWordmark from './assets/Wordmark White With Blue.svg'
@@ -14,6 +17,16 @@ function App() {
     history: PSOIterationData[]
     position: [number, number, number]
   } | null>(null)
+  const [searchInput, setSearchInput] = useState('')
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    const id = parseInt(searchInput)
+    if (!isNaN(id)) {
+      yard.searchContainer(id)
+      setSearchInput('')
+    }
+  }
 
   return (
     <div className="app">
@@ -26,6 +39,35 @@ function App() {
             {yard.connected ? 'Online' : 'Offline'}
           </div>
         </div>
+
+        {/* Toolbar: search + toggles */}
+        <div className="topbar-tools">
+          <form className="search-form" onSubmit={handleSearch}>
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Buscar container #ID"
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+            />
+          </form>
+          <button
+            className={`tool-btn ${yard.xrayMode ? 'active' : ''}`}
+            onClick={() => yard.setXrayMode(!yard.xrayMode)}
+            title="Modo Raio-X"
+          >
+            Raio-X
+          </button>
+          <button
+            className={`tool-btn ${yard.viewMode === 'heatmap' ? 'active' : ''}`}
+            onClick={() => yard.setViewMode(yard.viewMode === 'heatmap' ? 'normal' : 'heatmap')}
+            title="Heatmap de Ocupação"
+          >
+            Heatmap
+          </button>
+          <AnalyticsSidebar block={yard.activeBlock} connected={yard.connected} />
+        </div>
+
         <div className="topbar-stats">
           <div className="stat-chip">
             <span className="stat-chip-value">{yard.stats.total}</span>
@@ -39,6 +81,12 @@ function App() {
             <span className="stat-chip-value">{yard.stats.capacity}</span>
             <span className="stat-chip-label">capacidade</span>
           </div>
+          {yard.activeBlock && (
+            <div className="stat-chip">
+              <span className="stat-chip-value">{yard.activeBlock}</span>
+              <span className="stat-chip-label">bloco</span>
+            </div>
+          )}
         </div>
       </header>
 
@@ -49,6 +97,15 @@ function App() {
           dimensions={yard.dimensions}
           highlightId={yard.highlightId}
           removingId={yard.removingId}
+          xrayMode={yard.xrayMode}
+          simulatedHours={yard.simulatedHours}
+          cameraTarget={yard.cameraTarget}
+          heatmap={yard.heatmap}
+          viewMode={yard.viewMode}
+          reeferSlots={yard.reeferSlots}
+          rtgTarget={yard.rtgTarget}
+          rtgCarriedId={yard.rtgCarriedId}
+          searchId={yard.searchId}
           onContainerClick={setSelectedContainer}
         />
 
@@ -67,6 +124,8 @@ function App() {
           connected={yard.connected}
           containers={yard.containers}
           removingId={yard.removingId}
+          prefillRemoveId={yard.searchId}
+          activeBlock={yard.activeBlock}
           onShowPSO={(history: PSOIterationData[], position: [number, number, number]) => setPsoView({ history, position })}
         />
 
@@ -79,6 +138,18 @@ function App() {
             onClose={() => setPsoView(null)}
           />
         )}
+
+        {/* Timeline slider for time travel */}
+        <TimelineSlider
+          value={yard.simulatedHours}
+          onChange={yard.setSimulatedHours}
+        />
+
+        {/* Mini-map for multi-block */}
+        <MiniMap
+          activeBlock={yard.activeBlock}
+          onSwitch={yard.switchBlock}
+        />
 
         {/* Animation label */}
         {yard.animatingLabel && (

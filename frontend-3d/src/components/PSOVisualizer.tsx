@@ -167,7 +167,7 @@ export function PSOVisualizer({ history, yardDimensions, assignedPosition, onClo
     }
 
     // Cost line
-    ctx.strokeStyle = '#7BB3CC'
+    ctx.strokeStyle = '#84B8D9'
     ctx.lineWidth = 2
     ctx.beginPath()
     scores.forEach((s, i) => {
@@ -178,7 +178,7 @@ export function PSOVisualizer({ history, yardDimensions, assignedPosition, onClo
 
     // Current iteration marker
     if (currentIter < scores.length) {
-      ctx.fillStyle = '#7BB3CC'
+      ctx.fillStyle = '#84B8D9'
       ctx.beginPath()
       ctx.arc(toX(currentIter), toYScore(scores[currentIter]), 5, 0, Math.PI * 2)
       ctx.fill()
@@ -217,7 +217,7 @@ export function PSOVisualizer({ history, yardDimensions, assignedPosition, onClo
 
     // Legend
     const lx = W - PAD - 140
-    ctx.fillStyle = '#7BB3CC'; ctx.fillText('— Custo g_best', lx, 16)
+    ctx.fillStyle = '#84B8D9'; ctx.fillText('— Custo g_best', lx, 16)
     ctx.fillStyle = '#E8A838'; ctx.fillText('-- Inércia (w)', lx, 30)
 
     // Final value

@@ -104,6 +104,51 @@ def calc_grouping_cost(container: ContainerInfo, bay: int, num_bays: int) -> flo
         return 1.0 - ratio
 
 
+PENALTY_REEFER = 80.0   # Strong: reefer must go to reefer slot
+PENALTY_IMO = 60.0      # Strong: IMO segregation
+
+# IMO incompatibility: classes that must NOT be adjacent
+IMO_INCOMPATIBLE = {
+    ("1", "2"), ("1", "3"), ("1", "6"), ("1", "7"),
+    ("2", "3"), ("2", "6"), ("3", "4"), ("3", "6"),
+    ("4", "6"), ("4", "7"), ("5", "6"), ("6", "7"),
+}
+
+
+def calc_reefer_cost(
+    container: ContainerInfo, bay: int, row: int, yard: YardState
+) -> float:
+    """Reefer containers should go to reefer slots; non-reefers should avoid them."""
+    is_reefer_slot = (bay, row) in yard.reefer_slots
+    if container.is_reefer:
+        return 0.0 if is_reefer_slot else 1.0
+    else:
+        return 0.3 if is_reefer_slot else 0.0
+
+
+def calc_imo_cost(
+    container: ContainerInfo, bay: int, row: int, yard: YardState
+) -> float:
+    """Penalizes placing IMO containers adjacent to incompatible IMO classes."""
+    if not container.imo_class:
+        return 0.0
+
+    violations = 0
+    checks = 0
+    for db, dr in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+        nb, nr = bay + db, row + dr
+        if 0 <= nb < yard.num_bays and 0 <= nr < yard.num_rows:
+            stack = yard.get_stack(nb, nr)
+            for cid in stack:
+                info = yard.container_registry.get(cid)
+                if info and info.imo_class:
+                    checks += 1
+                    pair = tuple(sorted([container.imo_class, info.imo_class]))
+                    if pair in IMO_INCOMPATIBLE:
+                        violations += 1
+    return violations / max(checks, 1)
+
+
 def calculate_cost(
     bay: int,
     row: int,
@@ -129,12 +174,16 @@ def calculate_cost(
     c_weight = calc_weight_cost(container_info, tier, yard_state.max_tiers, yard_state, bay, row)
     c_distance = calc_distance_cost(bay, row, rtg_position, yard_state.num_bays, yard_state.num_rows)
     c_grouping = calc_grouping_cost(container_info, bay, yard_state.num_bays)
+    c_reefer = calc_reefer_cost(container_info, bay, row, yard_state)
+    c_imo = calc_imo_cost(container_info, bay, row, yard_state)
 
     total = (
         PENALTY_DIGGING * c_reshuffle
         + PENALTY_WEIGHT * c_weight
         + PENALTY_DISTANCE * c_distance
         + PENALTY_GROUPING * c_grouping
+        + PENALTY_REEFER * c_reefer
+        + PENALTY_IMO * c_imo
     )
 
     breakdown = {
@@ -146,6 +195,10 @@ def calculate_cost(
         "distance_weighted": round(PENALTY_DISTANCE * c_distance, 2),
         "grouping_penalty": round(c_grouping, 4),
         "grouping_weighted": round(PENALTY_GROUPING * c_grouping, 2),
+        "reefer_penalty": round(c_reefer, 4),
+        "reefer_weighted": round(PENALTY_REEFER * c_reefer, 2),
+        "imo_penalty": round(c_imo, 4),
+        "imo_weighted": round(PENALTY_IMO * c_imo, 2),
     }
 
     return round(total, 4), breakdown

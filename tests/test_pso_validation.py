@@ -122,6 +122,8 @@ class TestTotalCost:
             "weight_deviation", "weight_weighted",
             "rtg_distance", "distance_weighted",
             "grouping_penalty", "grouping_weighted",
+            "reefer_penalty", "reefer_weighted",
+            "imo_penalty", "imo_weighted",
         }
         assert set(breakdown.keys()) == expected_keys
 

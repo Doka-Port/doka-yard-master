@@ -11,6 +11,8 @@ export interface Container3D {
   weight_kg: number
   flow_type: 'IMPORT' | 'EXPORT'
   departure_time: string
+  is_reefer?: boolean
+  imo_class?: string | null
   opacity: number
 }
 
@@ -66,8 +68,11 @@ export interface YardStateResponse {
     weight_class: string
     departure_time: string
     flow_type: string
+    is_reefer?: boolean
+    imo_class?: string | null
   }[]
   heatmap: number[][]
+  reefer_slots?: number[][]
 }
 
 export interface InitResponse {

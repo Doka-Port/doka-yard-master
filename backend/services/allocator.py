@@ -77,9 +77,10 @@ class StackingOptimizer:
         container: ContainerInfo,
         rtg_position: tuple[int, int] | None = None,
         use_pso: bool = True,
+        excluded_columns: set[tuple[int, int]] | None = None,
     ) -> AllocationResult | None:
         """Ponto de entrada: decide entre greedy e PSO automaticamente."""
-        candidates = yard.get_valid_slots()
+        candidates = yard.get_valid_slots(excluded_columns=excluded_columns)
 
         if not candidates:
             return None
@@ -257,7 +258,8 @@ def allocate(
     container: ContainerInfo,
     rtg_position: tuple[int, int] | None = None,
     use_pso: bool = True,
+    excluded_columns: set[tuple[int, int]] | None = None,
 ) -> AllocationResult | None:
     """Ponto de entrada público. Backward-compatible."""
     optimizer = StackingOptimizer()
-    return optimizer.optimize(yard, container, rtg_position, use_pso=use_pso)
+    return optimizer.optimize(yard, container, rtg_position, use_pso=use_pso, excluded_columns=excluded_columns)

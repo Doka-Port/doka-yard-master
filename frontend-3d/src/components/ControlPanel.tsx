@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { GateInRequest, GateInResponse, Container3D, RetirarResponse, CsvContainer, PSOIterationData } from '../types/api'
 
 type Mode = 'preenchimento' | 'retirada'
@@ -6,8 +6,8 @@ type Mode = 'preenchimento' | 'retirada'
 interface Props {
   onInitialize: (bays: number, rows: number, tiers: number, block: string) => Promise<any>
   onGateIn: (req: GateInRequest) => Promise<GateInResponse | null>
-  onRemove: (containerId: number) => Promise<RetirarResponse | null>
-  onBulkLoadCsv: (containers: CsvContainer[]) => Promise<{ success: number; errors: string[] }>
+  onRemove: (containerId: number, block?: string) => Promise<RetirarResponse | null>
+  onBulkLoadCsv: (containers: CsvContainer[], block?: string) => Promise<{ success: number; errors: string[] }>
   stats: { total: number; capacity: number; rate: number }
   lastResult: GateInResponse | null
   lastRemoval: RetirarResponse | null
@@ -17,6 +17,8 @@ interface Props {
   connected: boolean
   containers: Container3D[]
   removingId: number | null
+  prefillRemoveId?: number | null
+  activeBlock: string
   onShowPSO: (history: PSOIterationData[], position: [number, number, number]) => void
 }
 
@@ -78,6 +80,8 @@ export function ControlPanel({
   error,
   connected,
   removingId,
+  prefillRemoveId,
+  activeBlock,
   onShowPSO,
 }: Props) {
   const [mode, setMode] = useState<Mode>('preenchimento')
@@ -90,6 +94,14 @@ export function ControlPanel({
   const [csvFileName, setCsvFileName] = useState<string | null>(null)
   const [csvLoadResult, setCsvLoadResult] = useState<string | null>(null)
   const [removeIdInput, setRemoveIdInput] = useState('')
+
+  // Auto-fill remove input when a container is searched
+  useEffect(() => {
+    if (prefillRemoveId != null) {
+      setRemoveIdInput(String(prefillRemoveId))
+      setMode('retirada')
+    }
+  }, [prefillRemoveId])
   const [expanded, setExpanded] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -103,7 +115,7 @@ export function ControlPanel({
       departure_time: dep.toISOString(),
       flow_type: flowType,
       rtg_position: [0, 0],
-      block_name: 'A1',
+      block_name: activeBlock,
     })
     if (result) setNextId((n) => n + 1)
   }
@@ -124,7 +136,7 @@ export function ControlPanel({
         departure_time: dep.toISOString(),
         flow_type: FLOWS[Math.floor(Math.random() * 2)],
         rtg_position: [Math.floor(Math.random() * 30), Math.floor(Math.random() * 6)],
-        block_name: 'A1',
+        block_name: activeBlock,
       })
     }
     setNextId(id)
@@ -146,7 +158,7 @@ export function ControlPanel({
 
   const handleCsvLoad = async () => {
     if (csvParsed.length === 0) return
-    const { success, errors } = await onBulkLoadCsv(csvParsed)
+    const { success, errors } = await onBulkLoadCsv(csvParsed, activeBlock)
     const msg = `${success}/${csvParsed.length} contentores alocados com sucesso`
     setCsvLoadResult(errors.length > 0 ? `${msg}\nFalhas: ${errors.join('; ')}` : msg)
     setCsvParsed([])
@@ -157,13 +169,13 @@ export function ControlPanel({
   const handleRemoveById = async () => {
     const id = parseInt(removeIdInput)
     if (isNaN(id)) return
-    await onRemove(id)
+    await onRemove(id, activeBlock)
     setRemoveIdInput('')
   }
 
   const handleRemoveSelected = async () => {
     if (!selectedContainer) return
-    await onRemove(selectedContainer.id)
+    await onRemove(selectedContainer.id, activeBlock)
   }
 
   return (
