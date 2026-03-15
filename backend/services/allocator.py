@@ -76,6 +76,7 @@ class StackingOptimizer:
         yard: YardState,
         container: ContainerInfo,
         rtg_position: tuple[int, int] | None = None,
+        use_pso: bool = True,
     ) -> AllocationResult | None:
         """Ponto de entrada: decide entre greedy e PSO automaticamente."""
         candidates = yard.get_valid_slots()
@@ -83,7 +84,7 @@ class StackingOptimizer:
         if not candidates:
             return None
 
-        if len(candidates) <= self.greedy_threshold:
+        if not use_pso or len(candidates) <= self.greedy_threshold:
             return self._greedy(yard, container, candidates, rtg_position)
 
         return self._pso(yard, container, candidates, rtg_position)
@@ -137,7 +138,7 @@ class StackingOptimizer:
         """
         start = time.perf_counter_ns()
 
-        n_particles = min(self.n_particles, len(candidates))
+        n_particles = max(2, min(self.n_particles, len(candidates)))
         candidate_arr = np.array(candidates, dtype=float)  # Nx3
 
         bay_bounds = (0.0, float(yard.num_bays - 1))
@@ -251,10 +252,6 @@ class StackingOptimizer:
         )
 
 
-# ─── Instância singleton ───
-_optimizer = StackingOptimizer()
-
-
 def allocate(
     yard: YardState,
     container: ContainerInfo,
@@ -262,4 +259,5 @@ def allocate(
     use_pso: bool = True,
 ) -> AllocationResult | None:
     """Ponto de entrada público. Backward-compatible."""
-    return _optimizer.optimize(yard, container, rtg_position)
+    optimizer = StackingOptimizer()
+    return optimizer.optimize(yard, container, rtg_position, use_pso=use_pso)

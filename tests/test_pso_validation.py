@@ -66,7 +66,7 @@ class TestReshuffleCost:
             yard.place_container(c, 0, 0, i)
         very_late = make_container(cid=10, departure_days=30)
         cost = calc_reshuffle_cost(yard, very_late, 0, 0, 3)
-        assert cost == 1.0, "All 3 below depart earlier → 3/3 = 1.0"
+        assert cost == 3 / 5, "All 3 below depart earlier → 3/max_tiers(5) = 0.6"
 
 
 class TestWeightCost:
@@ -78,12 +78,12 @@ class TestWeightCost:
     def test_heavy_high_tier_max_penalty(self):
         c = make_container(weight="HEAVY")
         cost = calc_weight_cost(c, 4, 5)
-        assert cost == 1.0, "HEAVY at max tier → (3/3) * (4/4) = 1.0"
+        assert cost == 0.5, "HEAVY at max tier → 0.5 * (3/3) * (4/4) = 0.5 (no stack penalty)"
 
     def test_light_high_tier_low_penalty(self):
         c = make_container(weight="LIGHT")
         cost = calc_weight_cost(c, 4, 5)
-        assert abs(cost - 1 / 3) < 0.01, "LIGHT at max tier → (1/3) * (4/4) ≈ 0.33"
+        assert abs(cost - 1 / 6) < 0.01, "LIGHT at max tier → 0.5 * (1/3) * (4/4) ≈ 0.167"
 
 
 class TestDistanceCost:

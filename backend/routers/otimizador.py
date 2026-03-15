@@ -101,7 +101,7 @@ async def _allocate_single(
     )
 
     warning = None
-    if result.cost_score > 0.7:
+    if result.cost_score > 70.0:
         warning = "high_reshuffle_risk"
 
     return AllocationResponse(

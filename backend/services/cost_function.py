@@ -1,10 +1,11 @@
 """Função de custo para alocação de contentores.
 
-Cost = (Penalty_Digging * 100) + (Penalty_Weight * 10) + (Distance * 1)
+Cost = (Digging * 100) + (Weight * 10) + (Grouping * 5) + (Distance * 1)
 
 Os pesos agressivos garantem que o demo mostra inteligência:
 - Digging (re-handling) domina completamente a decisão
 - Peso é um critério forte mas secundário
+- Grouping (EXPORT/IMPORT) influencia a separação por fluxo
 - Distância é um tiebreaker
 """
 
@@ -40,21 +41,43 @@ def calc_reshuffle_cost(
         if below and container.departure_time > below.departure_time:
             violations += 1
 
-    # Normalizado pelo tamanho da pilha para comparar pilhas de alturas diferentes
-    return violations / len(stack)
+    # Normalizado pelo max_tiers para penalizar mais violações em pilhas altas
+    return violations / yard.max_tiers
 
 
-def calc_weight_cost(container: ContainerInfo, tier: int, max_tiers: int) -> float:
-    """Penaliza contentores pesados em tiers altos.
+def calc_weight_cost(
+    container: ContainerInfo, tier: int, max_tiers: int,
+    yard: YardState | None = None, bay: int = 0, row: int = 0,
+) -> float:
+    """Penaliza contentores pesados em tiers altos e heavy-on-light.
 
-    HEAVY no tier 4 → 1.0 (penalização máxima)
-    LIGHT no tier 4 → 0.33
-    Qualquer coisa no tier 0-1 → 0.0
+    Combina duas penalidades:
+    - height_penalty: peso do container × altura relativa
+    - stacking_penalty: colocar pesado sobre leve (violação estrutural)
     """
-    if tier <= 1:
-        return 0.0
     w = WEIGHT_MAP.get(container.weight_class, 2)
-    return (w / 3) * (tier / (max_tiers - 1)) if max_tiers > 1 else 0.0
+
+    # Penalidade por altura (containers pesados em tiers altos)
+    if tier <= 1 or max_tiers <= 1:
+        height_penalty = 0.0
+    else:
+        height_penalty = (w / 3) * (tier / (max_tiers - 1))
+
+    # Penalidade por empilhamento: pesado sobre leve
+    stacking_penalty = 0.0
+    if yard is not None:
+        stack = yard.get_stack(bay, row)
+        if stack:
+            violations = 0
+            for cid in stack:
+                below = yard.container_registry.get(cid)
+                if below:
+                    below_w = WEIGHT_MAP.get(below.weight_class, 2)
+                    if w > below_w:
+                        violations += 1
+            stacking_penalty = violations / max(len(stack), 1)
+
+    return 0.5 * height_penalty + 0.5 * stacking_penalty
 
 
 def calc_distance_cost(
@@ -91,7 +114,7 @@ def calculate_cost(
 ) -> tuple[float, dict]:
     """Calcula o custo total usando pesos agressivos para o demo.
 
-    Cost = (Digging * 100) + (Weight * 10) + (Distance * 1)
+    Cost = (Digging * 100) + (Weight * 10) + (Grouping * 5) + (Distance * 1)
 
     Args:
         bay, row, tier: posição candidata
@@ -103,7 +126,7 @@ def calculate_cost(
         (cost_total, breakdown_dict)
     """
     c_reshuffle = calc_reshuffle_cost(yard_state, container_info, bay, row, tier)
-    c_weight = calc_weight_cost(container_info, tier, yard_state.max_tiers)
+    c_weight = calc_weight_cost(container_info, tier, yard_state.max_tiers, yard_state, bay, row)
     c_distance = calc_distance_cost(bay, row, rtg_position, yard_state.num_bays, yard_state.num_rows)
     c_grouping = calc_grouping_cost(container_info, bay, yard_state.num_bays)
 
