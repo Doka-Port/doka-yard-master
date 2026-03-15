@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import type { GateInRequest, GateInResponse, Container3D, RetirarResponse, CsvContainer } from '../types/api'
+import type { GateInRequest, GateInResponse, Container3D, RetirarResponse, CsvContainer, PSOIterationData } from '../types/api'
 
 type Mode = 'preenchimento' | 'retirada'
 
@@ -17,6 +17,7 @@ interface Props {
   connected: boolean
   containers: Container3D[]
   removingId: number | null
+  onShowPSO: (history: PSOIterationData[], position: [number, number, number]) => void
 }
 
 function parseCsv(text: string): CsvContainer[] {
@@ -77,6 +78,7 @@ export function ControlPanel({
   error,
   connected,
   removingId,
+  onShowPSO,
 }: Props) {
   const [mode, setMode] = useState<Mode>('preenchimento')
   const [nextId, setNextId] = useState(1)
@@ -267,6 +269,17 @@ export function ControlPanel({
                   <span className="fc-toast-pos">Pos: ({lastResult.assigned_position.join(', ')})</span>
                   <span className="fc-toast-score">Custo: {lastResult.cost_score.toFixed(2)}</span>
                   <span className="fc-toast-meta">{lastResult.optimizer_type} · {lastResult.computation_ms}ms</span>
+                  {lastResult.pso_history && lastResult.pso_history.length > 0 && (
+                    <button
+                      className="fc-pso-btn"
+                      onClick={() => onShowPSO(
+                        lastResult.pso_history!,
+                        lastResult.assigned_position as [number, number, number],
+                      )}
+                    >
+                      Ver PSO
+                    </button>
+                  )}
                 </div>
               )}
             </div>

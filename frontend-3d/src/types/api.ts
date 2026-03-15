@@ -24,6 +24,16 @@ export interface GateInRequest {
   block_name: string
 }
 
+export interface PSOIterationData {
+  iteration: number
+  particles: [number, number][]
+  particles_discrete: [number, number, number][]
+  particle_scores: number[]
+  g_best_position: [number, number]
+  g_best_score: number
+  inertia: number
+}
+
 export interface GateInResponse {
   container_id: number
   assigned_position: [number, number, number]
@@ -42,6 +52,7 @@ export interface GateInResponse {
     occupancy_rate: number
     dimensions: { bays: number; rows: number; tiers: number }
   }
+  pso_history: PSOIterationData[] | null
 }
 
 export interface YardStateResponse {

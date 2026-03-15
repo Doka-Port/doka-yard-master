@@ -1,14 +1,19 @@
 import { useState } from 'react'
 import { YardScene } from './components/YardScene'
 import { ControlPanel } from './components/ControlPanel'
+import { PSOVisualizer } from './components/PSOVisualizer'
 import { useYard } from './hooks/useYard'
-import type { Container3D } from './types/api'
+import type { Container3D, PSOIterationData } from './types/api'
 import dokaWordmark from './assets/Wordmark White With Blue.svg'
 import './App.css'
 
 function App() {
   const yard = useYard()
   const [selectedContainer, setSelectedContainer] = useState<Container3D | null>(null)
+  const [psoView, setPsoView] = useState<{
+    history: PSOIterationData[]
+    position: [number, number, number]
+  } | null>(null)
 
   return (
     <div className="app">
@@ -62,7 +67,18 @@ function App() {
           connected={yard.connected}
           containers={yard.containers}
           removingId={yard.removingId}
+          onShowPSO={(history: PSOIterationData[], position: [number, number, number]) => setPsoView({ history, position })}
         />
+
+        {/* PSO Visualizer */}
+        {psoView && yard.dimensions && (
+          <PSOVisualizer
+            history={psoView.history}
+            yardDimensions={{ bays: yard.dimensions.bays, rows: yard.dimensions.rows }}
+            assignedPosition={psoView.position}
+            onClose={() => setPsoView(null)}
+          />
+        )}
 
         {/* Animation label */}
         {yard.animatingLabel && (
