@@ -22,9 +22,11 @@ interface Props {
   heatmapMode?: boolean
   rtgPositionRef?: MutableRefObject<RTGPositionRef>
   onClick?: (c: Container3D) => void
+  is2D?: boolean
+  maxTier?: number | null
 }
 
-export function ContainerBox({ data, highlight, removing, xrayMode, simulatedHours, carriedByRtg, dimmed, heatmapMode, rtgPositionRef, onClick }: Props) {
+export function ContainerBox({ data, highlight, removing, xrayMode, simulatedHours, carriedByRtg, dimmed, heatmapMode, rtgPositionRef, onClick, is2D, maxTier }: Props) {
   const meshRef = useRef<THREE.Mesh>(null)
   const [hovered, setHovered] = useState(false)
   const currentPos = useRef(new THREE.Vector3(data.x, data.y + CONTAINER_H / 2, data.z))
@@ -137,11 +139,14 @@ export function ContainerBox({ data, highlight, removing, xrayMode, simulatedHou
   if (dimmed) finalOpacity = 0.12
   else if (isXrayed) finalOpacity = 0.12
   else if (removing) finalOpacity = 0.5
-  else if (animOrCarried) finalOpacity = 0.9
   else if (highlight) finalOpacity = 0.85
 
+  const isVisible = maxTier == null || data.tier <= maxTier;
+  const htmlProps80 = is2D ? {} : { distanceFactor: 80 };
+  const htmlProps100 = is2D ? {} : { distanceFactor: 100 };
+
   return (
-    <group>
+    <group visible={isVisible}>
       <mesh
         ref={meshRef}
         position={[data.x, data.y + CONTAINER_H / 2, data.z]}
@@ -189,7 +194,7 @@ export function ContainerBox({ data, highlight, removing, xrayMode, simulatedHou
         <Html
           position={[data.x, data.y + CONTAINER_H + 1.2, data.z]}
           center
-          distanceFactor={80}
+          {...htmlProps80}
           style={{ pointerEvents: 'none' }}
         >
           <div style={{
@@ -217,7 +222,7 @@ export function ContainerBox({ data, highlight, removing, xrayMode, simulatedHou
         <Html
           position={[currentPos.current.x, currentPos.current.y + CONTAINER_H, currentPos.current.z]}
           center
-          distanceFactor={80}
+          {...htmlProps80}
           style={{ pointerEvents: 'none' }}
         >
           <div style={{
@@ -225,7 +230,7 @@ export function ContainerBox({ data, highlight, removing, xrayMode, simulatedHou
             borderRadius: 4,
             padding: '3px 8px',
             color: '#fff',
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily: "var(--font-mono)",
             fontSize: 10,
             fontWeight: 700,
             whiteSpace: 'nowrap',
@@ -255,7 +260,7 @@ export function ContainerBox({ data, highlight, removing, xrayMode, simulatedHou
         <Html
           position={[data.x + CONTAINER_W / 2 - 0.5, data.y + CONTAINER_H + 0.3, data.z]}
           center
-          distanceFactor={100}
+          {...htmlProps100}
           style={{ pointerEvents: 'none' }}
         >
           <div style={{

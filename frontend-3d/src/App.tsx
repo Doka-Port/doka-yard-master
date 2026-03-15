@@ -22,6 +22,7 @@ function App() {
   const [searchInput, setSearchInput] = useState('')
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [is2D, setIs2D] = useState(false)
+  const [maxTier, setMaxTier] = useState<number | null>(null)
 
   useEffect(() => {
     if (theme === 'light') {
@@ -137,6 +138,7 @@ function App() {
           onContainerClick={setSelectedContainer}
           theme={theme}
           is2D={is2D}
+          maxTier={maxTier}
         />
 
         {/* Floating controls */}
@@ -215,6 +217,28 @@ function App() {
           <div className="empty-overlay">
             <div className="empty-icon"><Zap size={48} strokeWidth={1.5} /></div>
             <p>A conectar ao backend...<br />Certifique-se que o servidor está a correr na porta 8000</p>
+          </div>
+        )}
+
+        {/* Tier Controls Sidebar */}
+        {yard.dimensions && (
+          <div className="tier-sidebar">
+            <div className="tier-sidebar-title">Camadas</div>
+            <button
+              className={`tier-btn ${maxTier === null ? 'active' : ''}`}
+              onClick={() => setMaxTier(null)}
+            >
+              Todas
+            </button>
+            {Array.from({ length: yard.dimensions.tiers }).map((_, i) => (
+              <button
+                key={i}
+                className={`tier-btn ${maxTier === i ? 'active' : ''}`}
+                onClick={() => setMaxTier(i)}
+              >
+                Até tier {i}
+              </button>
+            ))}
           </div>
         )}
       </div>

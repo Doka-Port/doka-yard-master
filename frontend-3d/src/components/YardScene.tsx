@@ -25,9 +25,10 @@ interface Props {
   onContainerClick?: (c: Container3D) => void
   theme?: 'dark' | 'light'
   is2D?: boolean
+  maxTier?: number | null
 }
 
-function CameraAnimator({ target, controlsRef }: { target: { x: number; y: number; z: number } | null; controlsRef: React.RefObject<any> }) {
+function CameraAnimator({ target, controlsRef, is2D }: { target: { x: number; y: number; z: number } | null; controlsRef: React.RefObject<any>; is2D: boolean }) {
   const { camera } = useThree()
   const animating = useRef(false)
   const targetVec = useRef(new THREE.Vector3())
@@ -36,10 +37,14 @@ function CameraAnimator({ target, controlsRef }: { target: { x: number; y: numbe
   useEffect(() => {
     if (target) {
       targetVec.current.set(target.x, 0, target.z)
-      camPosTarget.current.set(target.x + 12, target.y + 10, target.z + 14)
+      if (is2D) {
+        camPosTarget.current.set(target.x, 150, target.z)
+      } else {
+        camPosTarget.current.set(target.x + 12, target.y + 10, target.z + 14)
+      }
       animating.current = true
     }
-  }, [target])
+  }, [target, is2D])
 
   useFrame(() => {
     if (!animating.current || !controlsRef.current) return
@@ -56,7 +61,7 @@ function CameraAnimator({ target, controlsRef }: { target: { x: number; y: numbe
   return null
 }
 
-export function YardScene({ containers, dimensions, highlightId, removingId, xrayMode, simulatedHours, cameraTarget, heatmap, viewMode, reeferSlots, rtgTarget, rtgCarriedId, searchId, onContainerClick, theme = 'dark', is2D = false }: Props) {
+export function YardScene({ containers, dimensions, highlightId, removingId, xrayMode, simulatedHours, cameraTarget, heatmap, viewMode, reeferSlots, rtgTarget, rtgCarriedId, searchId, onContainerClick, theme = 'dark', is2D = false, maxTier = null }: Props) {
   const bays = dimensions?.bays ?? 30
   const rows = dimensions?.rows ?? 6
   const SX = 6.5
@@ -78,7 +83,7 @@ export function YardScene({ containers, dimensions, highlightId, removingId, xra
       <fog attach="fog" args={[fogColor, 100, 350]} />
 
       {is2D ? (
-        <OrthographicCamera makeDefault position={[centerX, 150, centerZ]} zoom={22} near={0.1} far={1000} rotation={[-Math.PI / 2, 0, 0]} />
+        <OrthographicCamera makeDefault position={[centerX, 150, centerZ]} zoom={8} near={0.1} far={1000} rotation={[-Math.PI / 2, 0, 0]} />
       ) : (
         <PerspectiveCamera makeDefault position={[centerX + 40, 50, centerZ + 60]} fov={45} near={0.1} far={1000} />
       )}
@@ -116,14 +121,16 @@ export function YardScene({ containers, dimensions, highlightId, removingId, xra
           heatmapMode={viewMode === 'heatmap'}
           rtgPositionRef={rtgPosRef}
           onClick={onContainerClick}
+          is2D={is2D}
+          maxTier={maxTier}
         />
       ))}
 
       {/* RTG Crane */}
-      {rtgTarget && <RTGCrane target={rtgTarget} rows={rows} positionRef={rtgPosRef} />}
+      {rtgTarget && <RTGCrane target={rtgTarget} rows={rows} positionRef={rtgPosRef} is2D={is2D} />}
 
       {/* Camera animation for search */}
-      <CameraAnimator target={cameraTarget ?? null} controlsRef={orbitRef} />
+      <CameraAnimator target={cameraTarget ?? null} controlsRef={orbitRef} is2D={is2D} />
 
       {/* Controls */}
       <OrbitControls
@@ -132,10 +139,27 @@ export function YardScene({ containers, dimensions, highlightId, removingId, xra
         maxPolarAngle={is2D ? 0 : Math.PI / 2.1}
         minPolarAngle={is2D ? 0 : 0}
         enableRotate={!is2D}
+        enablePan={true}
+        mouseButtons={is2D ? {
+          LEFT: THREE.MOUSE.PAN,
+          MIDDLE: THREE.MOUSE.DOLLY,
+          RIGHT: THREE.MOUSE.ROTATE
+        } : {
+          LEFT: THREE.MOUSE.ROTATE,
+          MIDDLE: THREE.MOUSE.DOLLY,
+          RIGHT: THREE.MOUSE.PAN
+        }}
+        touches={is2D ? {
+          ONE: THREE.TOUCH.PAN,
+          TWO: THREE.TOUCH.DOLLY_PAN
+        } : {
+          ONE: THREE.TOUCH.ROTATE,
+          TWO: THREE.TOUCH.DOLLY_PAN
+        }}
         minDistance={15}
         maxDistance={250}
-        minZoom={5}
-        maxZoom={150}
+        minZoom={4}
+        maxZoom={100}
         enableDamping
         dampingFactor={0.05}
       />
