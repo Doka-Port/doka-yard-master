@@ -56,6 +56,7 @@ export function useYard() {
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const containersRef = useRef<Container3D[]>([])
+  const animatingRef = useRef(false)
 
   // Keep ref in sync
   useEffect(() => {
@@ -63,6 +64,7 @@ export function useYard() {
   }, [containers])
 
   const fetchState = useCallback(async (block = 'A1') => {
+    if (animatingRef.current) return // skip refresh during animations
     try {
       const r = await fetch(`${API}/patio/estado?block_name=${block}`)
       if (!r.ok) {
@@ -157,6 +159,7 @@ export function useYard() {
     setLoading(true)
     setError(null)
     setRemovingId(containerId)
+    animatingRef.current = true
     try {
       const r = await fetch(`${API}/retirar`, {
         method: 'POST',
@@ -227,6 +230,7 @@ export function useYard() {
         setAnimatingLabel(null)
         setLoading(false)
         setRemovingId(null)
+        animatingRef.current = false
       }, delay)
 
       return data
@@ -235,14 +239,16 @@ export function useYard() {
       setAnimatingLabel(null)
       setLoading(false)
       setRemovingId(null)
+      animatingRef.current = false
       return null
     }
   }, [])
 
-  const bulkLoadCsv = useCallback(async (csvContainers: CsvContainer[], block = 'A1'): Promise<number> => {
+  const bulkLoadCsv = useCallback(async (csvContainers: CsvContainer[], block = 'A1'): Promise<{ success: number; errors: string[] }> => {
     setLoading(true)
     setError(null)
     let successCount = 0
+    const errors: string[] = []
     try {
       for (const c of csvContainers) {
         const r = await fetch(`${API}/gate-in`, {
@@ -268,12 +274,18 @@ export function useYard() {
           })
           setDimensions(data.yard_stats.dimensions)
           successCount++
+        } else {
+          const detail = await r.json().catch(() => ({ detail: r.statusText }))
+          errors.push(`#${c.container_id}: ${detail.detail || r.statusText}`)
         }
       }
-      return successCount
+      if (errors.length > 0) {
+        setError(`Falhas: ${errors.join('; ')}`)
+      }
+      return { success: successCount, errors }
     } catch (e: any) {
       setError(e.message)
-      return successCount
+      return { success: successCount, errors }
     } finally {
       setLoading(false)
     }

@@ -7,7 +7,7 @@ interface Props {
   onInitialize: (bays: number, rows: number, tiers: number, block: string) => Promise<any>
   onGateIn: (req: GateInRequest) => Promise<GateInResponse | null>
   onRemove: (containerId: number) => Promise<RetirarResponse | null>
-  onBulkLoadCsv: (containers: CsvContainer[]) => Promise<number>
+  onBulkLoadCsv: (containers: CsvContainer[]) => Promise<{ success: number; errors: string[] }>
   stats: { total: number; capacity: number; rate: number }
   lastResult: GateInResponse | null
   lastRemoval: RetirarResponse | null
@@ -146,8 +146,9 @@ export function ControlPanel({
 
   const handleCsvLoad = async () => {
     if (csvParsed.length === 0) return
-    const count = await onBulkLoadCsv(csvParsed)
-    setCsvLoadResult(`${count}/${csvParsed.length} contentores alocados com sucesso`)
+    const { success, errors } = await onBulkLoadCsv(csvParsed)
+    const msg = `${success}/${csvParsed.length} contentores alocados com sucesso`
+    setCsvLoadResult(errors.length > 0 ? `${msg}\nFalhas: ${errors.join('; ')}` : msg)
     setCsvParsed([])
     setCsvFileName(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
