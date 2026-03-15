@@ -34,12 +34,12 @@ export function YardFloor({ bays, rows }: Props) {
       {/* Ground plane */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[totalX / 2 - SX / 2, 0, totalZ / 2 - SZ / 2]} receiveShadow>
         <planeGeometry args={[totalX + 10, totalZ + 10]} />
-        <meshStandardMaterial color="#1a1f2e" roughness={0.9} />
+        <meshStandardMaterial color="#0A0A0A" roughness={0.9} />
       </mesh>
 
       {/* Grid lines */}
       <lineSegments geometry={gridGeometry}>
-        <lineBasicMaterial color="#2a3f56" transparent opacity={0.4} />
+        <lineBasicMaterial color="#5B7F8F" transparent opacity={0.3} />
       </lineSegments>
 
       {/* Bay labels */}
@@ -49,7 +49,7 @@ export function YardFloor({ bays, rows }: Props) {
           position={[b * SX, 0.05, -SZ / 2 - 1.5]}
           rotation={[-Math.PI / 2, 0, 0]}
           fontSize={0.8}
-          color="#556677"
+          color="#9BA8B4"
           anchorX="center"
           anchorY="middle"
         >
@@ -64,7 +64,7 @@ export function YardFloor({ bays, rows }: Props) {
           position={[-SX / 2 - 2, 0.05, r * SZ]}
           rotation={[-Math.PI / 2, 0, 0]}
           fontSize={0.8}
-          color="#556677"
+          color="#9BA8B4"
           anchorX="center"
           anchorY="middle"
         >

@@ -111,7 +111,7 @@
   border-radius: 14px;
   min-width: 680px;
   max-width: 860px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 212, 170, 0.15);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 1px rgba(123, 179, 204, 0.15);
   transition: all 250ms ease;
 }
 
@@ -237,14 +237,14 @@
 .fc-csv-btn:hover {
   border-color: var(--teal);
   color: var(--teal);
-  background: rgba(0, 212, 170, 0.05);
+  background: rgba(123, 179, 204, 0.05);
 }
 
 .fc-feedback.success {
   font-size: 0.68rem;
   color: var(--teal);
   padding: 4px 10px;
-  background: rgba(0, 212, 170, 0.08);
+  background: rgba(123, 179, 204, 0.08);
   border-radius: 4px;
 }
 
@@ -317,18 +317,18 @@
 .fc-action-btn.primary:hover:not(:disabled) {
   filter: brightness(1.15);
   transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(0, 212, 170, 0.3);
+  box-shadow: 0 4px 20px rgba(123, 179, 204, 0.3);
 }
 
 .fc-action-btn.danger {
-  background: linear-gradient(135deg, #b91c1c, #ef4444);
+  background: var(--error);
   color: white;
 }
 
 .fc-action-btn.danger:hover:not(:disabled) {
   filter: brightness(1.15);
   transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 4px 20px rgba(201, 79, 79, 0.3);
 }
 
 .fc-action-btn:disabled {
@@ -388,7 +388,7 @@
 }
 
 .fc-toast.removal {
-  border-color: rgba(239, 68, 68, 0.3);
+  border-color: rgba(201, 79, 79, 0.3);
 }
 
 .fc-toast-pos {
@@ -412,7 +412,7 @@
 }
 
 .fc-toast.removal .fc-toast-score {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(201, 79, 79, 0.1);
   color: var(--red);
 }
 
@@ -435,7 +435,7 @@
   font-family: var(--font-mono);
   color: var(--text-secondary);
   padding: 2px 6px;
-  background: rgba(239, 68, 68, 0.08);
+  background: rgba(201, 79, 79, 0.08);
   border-radius: 3px;
 }
 
@@ -462,7 +462,7 @@
 
 .fc-remove-input:focus {
   border-color: var(--red);
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+  box-shadow: 0 0 0 2px rgba(201, 79, 79, 0.15);
 }
 
 .fc-selected {
@@ -471,8 +471,8 @@
   justify-content: space-between;
   gap: 12px;
   padding: 8px 12px;
-  background: rgba(239, 68, 68, 0.04);
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(201, 79, 79, 0.04);
+  border: 1px solid rgba(201, 79, 79, 0.2);
   border-radius: 8px;
   animation: slideUp 0.2s ease;
 }
@@ -518,7 +518,7 @@
 
 .fc-error {
   padding: 6px 10px;
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(201, 79, 79, 0.1);
   border: 1px solid var(--red);
   border-radius: 6px;
   font-size: 0.72rem;
@@ -585,7 +585,7 @@
   top: 16px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(239, 68, 68, 0.9);
+  background: rgba(201, 79, 79, 0.9);
   color: #fff;
   font-family: var(--font-mono);
   font-size: 0.82rem;
@@ -594,7 +594,7 @@
   border-radius: 6px;
   z-index: 10;
   animation: pulseLabel 1s ease infinite;
-  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 4px 20px rgba(201, 79, 79, 0.4);
 }
 
 /* ─── ANIMATIONS ─── */

@@ -30,9 +30,9 @@ export function YardScene({ containers, dimensions, highlightId, removingId, onC
         near: 0.1,
         far: 1000,
       }}
-      style={{ background: '#0a0e14' }}
+      style={{ background: '#0A0A0A' }}
     >
-      <fog attach="fog" args={['#0a0e14', 100, 350]} />
+      <fog attach="fog" args={['#0A0A0A', 100, 350]} />
 
       {/* Lighting */}
       <ambientLight intensity={0.35} />
@@ -48,7 +48,7 @@ export function YardScene({ containers, dimensions, highlightId, removingId, onC
         shadow-camera-top={100}
         shadow-camera-bottom={-100}
       />
-      <pointLight position={[centerX, 40, centerZ]} intensity={0.4} color="#22d3ee" />
+      <pointLight position={[centerX, 40, centerZ]} intensity={0.4} color="#7BB3CC" />
 
       {/* Floor */}
       <YardFloor bays={bays} rows={rows} />

@@ -22,11 +22,11 @@ SPACING_X = 6.5   # ~6.1m de um contentor 20ft + gap
 SPACING_Y = 2.9   # ~2.6m de altura + gap
 SPACING_Z = 2.8   # ~2.44m de largura + gap
 
-# Cores por weight_class (para Three.js)
+# Cores por weight_class (Doka Style Guide)
 WEIGHT_COLORS = {
-    "HEAVY":  "#ef4444",  # vermelho
-    "MEDIUM": "#f59e0b",  # âmbar
-    "LIGHT":  "#22d3ee",  # ciano
+    "HEAVY":  "#C94F4F",  # Doka Error Red
+    "MEDIUM": "#E8A838",  # Doka Warning Gold
+    "LIGHT":  "#7BB3CC",  # Doka Brand Blue
 }
 
 
@@ -251,7 +251,7 @@ async def retirar_container(req: RetirarRequest, session: AsyncSession = Depends
         yard.remove_container(cid)
 
         # Realoca usando o otimizador
-        result = allocate(yard, above_info, None, use_pso=False)
+        result = allocate(yard, above_info, None, use_pso=True)
         if result is None:
             # Sem espaço — colocar de volta e abortar
             yard.place_container(above_info, old_pos[0], old_pos[1], old_pos[2])
