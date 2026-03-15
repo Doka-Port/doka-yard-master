@@ -44,9 +44,10 @@ interface Props {
   target: RTGTarget
   rows: number
   positionRef?: MutableRefObject<RTGPositionRef>
+  is2D?: boolean
 }
 
-export function RTGCrane({ target, rows, positionRef }: Props) {
+export function RTGCrane({ target, rows, positionRef, is2D = false }: Props) {
   const groupRef = useRef<THREE.Group>(null)
   const trolleyRef = useRef<THREE.Group>(null)
   const spreaderRef = useRef<THREE.Group>(null)
@@ -138,7 +139,7 @@ export function RTGCrane({ target, rows, positionRef }: Props) {
   const legOffsetZ = spanZ / 2
 
   return (
-    <group ref={groupRef} position={[0, 0, 0]}>
+    <group ref={groupRef} position={[0, 0, 0]} visible={!is2D}>
       {/* Left leg */}
       <mesh position={[0, LEG_HEIGHT / 2, centerZ - legOffsetZ]}>
         <boxGeometry args={[LEG_WIDTH, LEG_HEIGHT, LEG_DEPTH]} />
@@ -154,20 +155,20 @@ export function RTGCrane({ target, rows, positionRef }: Props) {
       {/* Crossbeam */}
       <mesh position={[0, LEG_HEIGHT - BEAM_HEIGHT / 2, centerZ]}>
         <boxGeometry args={[2.0, BEAM_HEIGHT, spanZ]} />
-        <meshStandardMaterial color={ACCENT_COLOR} metalness={0.4} roughness={0.5} />
+        <meshStandardMaterial color={ACCENT_COLOR} metalness={0.4} roughness={0.5} transparent={is2D} opacity={is2D ? 0.05 : 1} />
       </mesh>
 
       {/* Top rail (decorative) */}
       <mesh position={[0, LEG_HEIGHT + 0.3, centerZ]}>
         <boxGeometry args={[1.2, 0.6, spanZ + 2]} />
-        <meshStandardMaterial color={CRANE_COLOR} metalness={0.5} roughness={0.4} />
+        <meshStandardMaterial color={CRANE_COLOR} metalness={0.5} roughness={0.4} transparent={is2D} opacity={is2D ? 0.05 : 1} />
       </mesh>
 
       {/* Trolley (moves along Z on the crossbeam) */}
       <group ref={trolleyRef} position={[0, LEG_HEIGHT - BEAM_HEIGHT - TROLLEY_H / 2, 0]}>
         <mesh>
           <boxGeometry args={[TROLLEY_W, TROLLEY_H, TROLLEY_D]} />
-          <meshStandardMaterial color={ACCENT_COLOR} metalness={0.3} roughness={0.6} />
+          <meshStandardMaterial color={ACCENT_COLOR} metalness={0.3} roughness={0.6} transparent={is2D} opacity={is2D ? 0.2 : 1} />
         </mesh>
       </group>
 
@@ -185,13 +186,21 @@ export function RTGCrane({ target, rows, positionRef }: Props) {
       <group ref={spreaderRef} position={[0, restY, 0]}>
         <mesh>
           <boxGeometry args={[SPREADER_W, SPREADER_H, SPREADER_D]} />
-          <meshStandardMaterial color={SPREADER_COLOR} metalness={0.4} roughness={0.5} emissive={SPREADER_COLOR} emissiveIntensity={0.15} />
+          <meshStandardMaterial 
+            color={SPREADER_COLOR} 
+            metalness={0.4} 
+            roughness={0.5} 
+            emissive={SPREADER_COLOR} 
+            emissiveIntensity={0.15} 
+            transparent={is2D} 
+            opacity={is2D ? 0.35 : 1}
+          />
         </mesh>
         {/* Corner locks */}
         {[[-1, -1], [-1, 1], [1, -1], [1, 1]].map(([xm, zm], i) => (
           <mesh key={i} position={[xm * (SPREADER_W / 2 - 0.2), -SPREADER_H / 2 - 0.15, zm * (SPREADER_D / 2 - 0.15)]}>
             <boxGeometry args={[0.3, 0.3, 0.3]} />
-            <meshStandardMaterial color="#C94F4F" metalness={0.3} roughness={0.5} />
+            <meshStandardMaterial color="#C94F4F" metalness={0.3} roughness={0.5} transparent={is2D} opacity={is2D ? 0.4 : 1} />
           </mesh>
         ))}
       </group>

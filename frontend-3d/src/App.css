@@ -1068,3 +1068,54 @@
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-accent); border-radius: 3px; }
+
+/* ─── TIER SIDEBAR ─── */
+.tier-sidebar {
+  position: absolute;
+  top: 130px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+  background: var(--bg-translucent);
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border-accent);
+  backdrop-filter: blur(10px);
+}
+
+.tier-sidebar-title {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.tier-btn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.tier-btn:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.tier-btn.active {
+  background: var(--brand-dark);
+  color: white;
+  border-color: var(--brand-dark);
+}
