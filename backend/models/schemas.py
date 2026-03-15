@@ -125,6 +125,17 @@ class Container3D(BaseModel):
     opacity: float = 1.0
 
 
+class PSOIterationData(BaseModel):
+    """Dados de uma iteração PSO para visualização de gráficos."""
+    iteration: int
+    particles: list[list[float]]
+    particles_discrete: list[list[int]]
+    particle_scores: list[float]
+    g_best_position: list[float]
+    g_best_score: float
+    inertia: float
+
+
 class GateInResponse(BaseModel):
     """Resposta do gate-in — compatível com renderer 3D."""
     container_id: int
@@ -139,6 +150,7 @@ class GateInResponse(BaseModel):
     container_3d: Container3D
     yard_3d: list[Container3D]
     yard_stats: dict
+    pso_history: Optional[list[PSOIterationData]] = None
 
 
 # ─── Retirada ───

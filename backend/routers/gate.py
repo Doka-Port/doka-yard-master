@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.database import get_session
 from sqlalchemy import select, update
 from backend.models.db_models import AllocationLog, Container
-from backend.models.schemas import GateInRequest, GateInResponse, Container3D, RetirarRequest, RetirarResponse, ReshuffleMove
+from backend.models.schemas import GateInRequest, GateInResponse, Container3D, RetirarRequest, RetirarResponse, ReshuffleMove, PSOIterationData
 from backend.models.yard_state import ContainerInfo, YardState
 from backend.routers.patio import get_yard
 from backend.services.allocator import allocate
@@ -153,6 +153,22 @@ async def gate_in(req: GateInRequest, session: AsyncSession = Depends(get_sessio
     if result.cost_score > 70.0:  # com pesos agressivos (100/10/1), >70 é preocupante
         warning = "high_reshuffle_risk"
 
+    # Converter pso_history do allocator para schema Pydantic
+    pso_history_schema = None
+    if result.pso_history:
+        pso_history_schema = [
+            PSOIterationData(
+                iteration=h.iteration,
+                particles=h.particles,
+                particles_discrete=h.particles_discrete,
+                particle_scores=h.particle_scores,
+                g_best_position=h.g_best_position,
+                g_best_score=h.g_best_score,
+                inertia=h.inertia,
+            )
+            for h in result.pso_history
+        ]
+
     return GateInResponse(
         container_id=req.container_id,
         assigned_position=[result.bay, result.row, result.tier],
@@ -165,6 +181,7 @@ async def gate_in(req: GateInRequest, session: AsyncSession = Depends(get_sessio
         timestamp=now.isoformat(),
         container_3d=container_3d,
         yard_3d=yard_3d,
+        pso_history=pso_history_schema,
         yard_stats={
             "total_containers": yard.current_occupancy,
             "total_capacity": yard.total_capacity,
