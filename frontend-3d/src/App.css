@@ -7,7 +7,7 @@
 
 /* ─── TOP BAR ─── */
 .topbar {
-  background: rgba(13, 18, 25, 0.92);
+  background: var(--bg-translucent);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-subtle);
   padding: 0 24px;
@@ -38,7 +38,7 @@
   color: var(--text-muted);
   padding: 3px 10px;
   background: var(--bg-surface);
-  border-radius: 20px;
+  border-radius: 9999px;
   border: 1px solid var(--border-subtle);
 }
 
@@ -78,14 +78,11 @@
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 0.85rem;
-  background: linear-gradient(135deg, var(--teal), var(--cyan));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--brand-primary);
 }
 
 .stat-chip-label {
-  font-size: 0.6rem;
+  font-size: 11px;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -105,13 +102,13 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
-  background: rgba(13, 18, 25, 0.92);
+  background: var(--bg-translucent);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-accent);
   border-radius: 14px;
   min-width: 680px;
   max-width: 860px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 1px rgba(132, 184, 217, 0.15);
+  box-shadow: none;
   transition: all 250ms ease;
 }
 
@@ -166,8 +163,8 @@
 }
 
 .fc-tab.active {
-  background: linear-gradient(135deg, var(--teal-deep), var(--teal));
-  color: var(--bg-deep);
+  background: var(--brand-dark);
+  color: #ffffff;
 }
 
 .fc-tab:not(.active):hover {
@@ -262,7 +259,7 @@
 }
 
 .fc-field label {
-  font-size: 0.58rem;
+  font-size: 11px;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -310,14 +307,13 @@
 }
 
 .fc-action-btn.primary {
-  background: linear-gradient(135deg, var(--teal-deep), var(--teal));
-  color: var(--bg-deep);
+  background: var(--brand-primary);
+  color: #ffffff;
 }
 
 .fc-action-btn.primary:hover:not(:disabled) {
   filter: brightness(1.15);
   transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(132, 184, 217, 0.3);
 }
 
 .fc-action-btn.danger {
@@ -328,7 +324,6 @@
 .fc-action-btn.danger:hover:not(:disabled) {
   filter: brightness(1.15);
   transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(201, 79, 79, 0.3);
 }
 
 .fc-action-btn:disabled {
@@ -344,7 +339,7 @@
 }
 
 .fc-batch-label {
-  font-size: 0.62rem;
+  font-size: 11px;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -417,7 +412,7 @@
 }
 
 .fc-toast-meta {
-  font-size: 0.65rem;
+  font-size: 11px;
   color: var(--text-muted);
   font-family: var(--font-mono);
 }
@@ -431,7 +426,7 @@
 }
 
 .fc-reshuffle-move {
-  font-size: 0.6rem;
+  font-size: 11px;
   font-family: var(--font-mono);
   color: var(--text-secondary);
   padding: 2px 6px;
@@ -497,12 +492,12 @@
 
 .fc-selected-pos {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 11px;
   color: var(--text-muted);
 }
 
 .fc-reshuffle-warn {
-  font-size: 0.6rem;
+  font-size: 11px;
   color: var(--amber);
   padding: 2px 8px;
   background: rgba(245, 158, 11, 0.1);
@@ -532,7 +527,7 @@
   left: 16px;
   display: flex;
   gap: 12px;
-  background: rgba(10, 14, 20, 0.85);
+  background: var(--bg-translucent-light);
   backdrop-filter: blur(8px);
   padding: 8px 14px;
   border-radius: 6px;
@@ -572,6 +567,10 @@
   font-size: 3rem;
   opacity: 0.3;
   margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
 }
 
 .empty-overlay p {
@@ -594,7 +593,6 @@
   border-radius: 6px;
   z-index: 10;
   animation: pulseLabel 1s ease infinite;
-  box-shadow: 0 4px 20px rgba(201, 79, 79, 0.4);
 }
 
 /* ─── ANIMATIONS ─── */
@@ -623,12 +621,12 @@
 }
 
 .pso-viz-panel {
-  background: rgba(13, 18, 25, 0.95);
+  background: var(--bg-translucent);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-accent);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: none;
 }
 
 .pso-viz-header {
@@ -664,7 +662,7 @@
   color: var(--text-muted);
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 0.65rem;
+  font-size: 11px;
   cursor: pointer;
   transition: all 150ms;
 }
@@ -742,7 +740,7 @@
 
 .pso-iter-label {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 11px;
   color: var(--text-muted);
   min-width: 40px;
   text-align: right;
@@ -765,7 +763,7 @@
 }
 
 .pso-stat-label {
-  font-size: 0.55rem;
+  font-size: 11px;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -839,6 +837,9 @@
 }
 
 .tool-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   padding: 5px 12px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
@@ -885,7 +886,7 @@
   top: 56px;
   right: 16px;
   width: 260px;
-  background: rgba(13, 18, 25, 0.95);
+  background: var(--bg-translucent);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-accent);
   border-radius: 10px;
@@ -926,7 +927,7 @@
 }
 
 .analytics-label {
-  font-size: 0.55rem;
+  font-size: 11px;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -966,7 +967,7 @@
 }
 
 .analytics-bar-footer {
-  font-size: 0.58rem;
+  font-size: 11px;
   color: var(--text-muted);
   font-family: var(--font-mono);
   margin-top: 4px;
@@ -982,7 +983,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(13, 18, 25, 0.88);
+  background: var(--bg-translucent-light);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
@@ -992,6 +993,8 @@
 
 .timeline-icon {
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
 }
 
 .timeline-range {
@@ -1012,7 +1015,7 @@
   position: absolute;
   top: 16px;
   left: 16px;
-  background: rgba(13, 18, 25, 0.88);
+  background: var(--bg-translucent-light);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
@@ -1022,7 +1025,7 @@
 
 .minimap-title {
   font-family: var(--font-display);
-  font-size: 0.58rem;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;

@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
+import { OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei'
 import * as THREE from 'three'
 import { ContainerBox } from './ContainerBox'
 import { YardFloor } from './YardFloor'
@@ -23,6 +23,8 @@ interface Props {
   rtgCarriedId?: number | null
   searchId?: number | null
   onContainerClick?: (c: Container3D) => void
+  theme?: 'dark' | 'light'
+  is2D?: boolean
 }
 
 function CameraAnimator({ target, controlsRef }: { target: { x: number; y: number; z: number } | null; controlsRef: React.RefObject<any> }) {
@@ -54,7 +56,7 @@ function CameraAnimator({ target, controlsRef }: { target: { x: number; y: numbe
   return null
 }
 
-export function YardScene({ containers, dimensions, highlightId, removingId, xrayMode, simulatedHours, cameraTarget, heatmap, viewMode, reeferSlots, rtgTarget, rtgCarriedId, searchId, onContainerClick }: Props) {
+export function YardScene({ containers, dimensions, highlightId, removingId, xrayMode, simulatedHours, cameraTarget, heatmap, viewMode, reeferSlots, rtgTarget, rtgCarriedId, searchId, onContainerClick, theme = 'dark', is2D = false }: Props) {
   const bays = dimensions?.bays ?? 30
   const rows = dimensions?.rows ?? 6
   const SX = 6.5
@@ -66,18 +68,20 @@ export function YardScene({ containers, dimensions, highlightId, removingId, xra
   const rtgPosRef = useRef<RTGPositionRef>({ x: 0, y: 0, z: 0, phase: 'idle', arrivedX: true, arrivedZ: true, arrivedY: true })
   const orbitRef = useRef<any>(null)
 
+  const fogColor = theme === 'light' ? '#F2F2F2' : '#0A0A0A'
+
   return (
     <Canvas
       shadows
-      camera={{
-        position: [centerX + 40, 50, centerZ + 60],
-        fov: 45,
-        near: 0.1,
-        far: 1000,
-      }}
-      style={{ background: '#0A0A0A' }}
+      style={{ background: 'transparent' }}
     >
-      <fog attach="fog" args={['#0A0A0A', 100, 350]} />
+      <fog attach="fog" args={[fogColor, 100, 350]} />
+
+      {is2D ? (
+        <OrthographicCamera makeDefault position={[centerX, 150, centerZ]} zoom={22} near={0.1} far={1000} rotation={[-Math.PI / 2, 0, 0]} />
+      ) : (
+        <PerspectiveCamera makeDefault position={[centerX + 40, 50, centerZ + 60]} fov={45} near={0.1} far={1000} />
+      )}
 
       {/* Lighting */}
       <ambientLight intensity={0.35} />
@@ -125,9 +129,13 @@ export function YardScene({ containers, dimensions, highlightId, removingId, xra
       <OrbitControls
         ref={orbitRef}
         target={[centerX, 4, centerZ]}
-        maxPolarAngle={Math.PI / 2.1}
+        maxPolarAngle={is2D ? 0 : Math.PI / 2.1}
+        minPolarAngle={is2D ? 0 : 0}
+        enableRotate={!is2D}
         minDistance={15}
         maxDistance={250}
+        minZoom={5}
+        maxZoom={150}
         enableDamping
         dampingFactor={0.05}
       />

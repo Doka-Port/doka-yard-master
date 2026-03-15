@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { FileText, FolderOpen, SkipBack, SkipForward, ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react'
 import type { GateInRequest, GateInResponse, Container3D, RetirarResponse, CsvContainer, PSOIterationData } from '../types/api'
 
 type Mode = 'preenchimento' | 'retirada'
@@ -224,7 +225,7 @@ export function ControlPanel({
                   id="csv-upload"
                 />
                 <label htmlFor="csv-upload" className="fc-csv-btn">
-                  {csvFileName ? `📄 ${csvFileName}` : '📂 Carregar CSV'}
+                  {csvFileName ? <><FileText size={14} strokeWidth={1.5} /> {csvFileName}</> : <><FolderOpen size={14} strokeWidth={1.5} /> Carregar CSV</>}
                 </label>
                 {csvParsed.length > 0 && (
                   <button className="fc-action-btn primary" onClick={handleCsvLoad} disabled={loading}>

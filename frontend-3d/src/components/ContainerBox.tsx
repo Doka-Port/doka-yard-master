@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, type MutableRefObject } from 'react'
+import { AlertTriangle } from 'lucide-react'
 import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import * as THREE from 'three'
@@ -265,12 +266,10 @@ export function ContainerBox({ data, highlight, removing, xrayMode, simulatedHou
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 9,
-            fontWeight: 900,
             color: '#000',
             border: '1.5px solid #C94F4F',
           }}>
-            ⚠
+            <AlertTriangle size={9} strokeWidth={2} color="#000" />
           </div>
         </Html>
       )}

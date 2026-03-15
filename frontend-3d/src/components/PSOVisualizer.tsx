@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { SkipBack, ChevronLeft, Play, Pause, ChevronRight, SkipForward, X } from 'lucide-react'
 import type { PSOIterationData } from '../types/api'
 
 interface Props {
@@ -244,7 +245,7 @@ export function PSOVisualizer({ history, yardDimensions, assignedPosition, onClo
               Convergência
             </button>
           </div>
-          <button className="pso-close" onClick={onClose}>✕</button>
+          <button className="pso-close" onClick={onClose}><X size={16} strokeWidth={1.5} /></button>
         </div>
 
         <div className="pso-viz-canvas-wrap">
@@ -258,13 +259,13 @@ export function PSOVisualizer({ history, yardDimensions, assignedPosition, onClo
 
         {tab === 'scatter' && (
           <div className="pso-viz-controls">
-            <button className="pso-ctrl-btn" onClick={() => { setCurrentIter(0); setPlaying(false) }}>⏮</button>
-            <button className="pso-ctrl-btn" onClick={() => setCurrentIter(i => Math.max(0, i - 1))}>◀</button>
+            <button className="pso-ctrl-btn" onClick={() => { setCurrentIter(0); setPlaying(false) }}><SkipBack size={14} strokeWidth={1.5} /></button>
+            <button className="pso-ctrl-btn" onClick={() => setCurrentIter(i => Math.max(0, i - 1))}><ChevronLeft size={14} strokeWidth={1.5} /></button>
             <button className="pso-ctrl-btn play" onClick={() => setPlaying(!playing)}>
-              {playing ? '⏸' : '▶'}
+              {playing ? <Pause size={14} strokeWidth={1.5} /> : <Play size={14} strokeWidth={1.5} />}
             </button>
-            <button className="pso-ctrl-btn" onClick={() => setCurrentIter(i => Math.min(maxIter, i + 1))}>▶</button>
-            <button className="pso-ctrl-btn" onClick={() => { setCurrentIter(maxIter); setPlaying(false) }}>⏭</button>
+            <button className="pso-ctrl-btn" onClick={() => setCurrentIter(i => Math.min(maxIter, i + 1))}><ChevronRight size={14} strokeWidth={1.5} /></button>
+            <button className="pso-ctrl-btn" onClick={() => { setCurrentIter(maxIter); setPlaying(false) }}><SkipForward size={14} strokeWidth={1.5} /></button>
             <input
               type="range"
               min={0}

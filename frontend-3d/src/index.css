@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Geist:wght@400;500&family=Geist+Mono:wght@400;500&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
   /* Doka Style Guide Palette */
-  --brand-primary: #84B8D9;
+  --brand-primary: #7BB3CC;
   --brand-dark: #2E5E73;
   --brand-light: #A8D4E8;
   --brand-accent: #5B7F8F;
@@ -32,6 +32,9 @@
   --text-secondary: var(--neutral-400);
   --text-muted: #556677;
   
+  --bg-translucent: rgba(13, 18, 25, 0.92);
+  --bg-translucent-light: rgba(13, 18, 25, 0.88);
+  
   /* Legacy/Refactor Aliases (to minimize breakage) */
   --teal: var(--brand-primary);
   --teal-dim: rgba(132, 184, 217, 0.3);
@@ -43,7 +46,7 @@
   /* Typography */
   --font-display: 'Geist', 'Inter', sans-serif;
   --font-body: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-mono: 'Geist Mono', 'Courier New', monospace;
 }
 
 html, body, #root {
@@ -53,4 +56,19 @@ html, body, #root {
   font-family: var(--font-mono);
   background: var(--bg-deep);
   color: var(--text-primary);
+}
+
+.theme-light {
+  --bg-deep: var(--bg-off-white);
+  --bg-primary: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-elevated: var(--bg-off-white);
+  --border-subtle: #d1d5db;
+  --border-accent: var(--brand-primary);
+  --text-primary: var(--brand-dark);
+  --text-secondary: var(--brand-accent);
+  --text-muted: #6b7280;
+  --bg-translucent: rgba(255, 255, 255, 0.92);
+  --bg-translucent-light: rgba(255, 255, 255, 0.88);
+  --teal-dim: rgba(123, 179, 204, 0.2);
 }

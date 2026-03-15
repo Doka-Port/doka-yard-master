@@ -1,3 +1,5 @@
+import { Clock } from 'lucide-react'
+
 interface Props {
   value: number
   onChange: (hours: number) => void
@@ -15,7 +17,9 @@ export function TimelineSlider({ value, onChange }: Props) {
 
   return (
     <div className="timeline-slider">
-      <span className="timeline-icon" title="Time Travel">⏳</span>
+      <span className="timeline-icon" title="Time Travel">
+        <Clock size={16} strokeWidth={1.5} />
+      </span>
       <input
         type="range"
         min={0}

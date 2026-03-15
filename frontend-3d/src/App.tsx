@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { Anchor, Zap, Sun, Moon, Map, Box } from 'lucide-react'
 import { YardScene } from './components/YardScene'
 import { ControlPanel } from './components/ControlPanel'
 import { PSOVisualizer } from './components/PSOVisualizer'
@@ -7,7 +8,8 @@ import { MiniMap } from './components/MiniMap'
 import { AnalyticsSidebar } from './components/AnalyticsSidebar'
 import { useYard } from './hooks/useYard'
 import type { Container3D, PSOIterationData } from './types/api'
-import dokaWordmark from './assets/Wordmark White With Blue.svg'
+import dokaWordmarkWhite from './assets/Wordmark White With Blue.svg'
+import dokaWordmarkBlack from './assets/Wordmark Black With Blue.png'
 import './App.css'
 
 function App() {
@@ -18,6 +20,16 @@ function App() {
     position: [number, number, number]
   } | null>(null)
   const [searchInput, setSearchInput] = useState('')
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [is2D, setIs2D] = useState(false)
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.classList.add('theme-light')
+    } else {
+      document.documentElement.classList.remove('theme-light')
+    }
+  }, [theme])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,7 +45,7 @@ function App() {
       {/* Top bar */}
       <header className="topbar">
         <div className="topbar-left">
-          <img src={dokaWordmark} alt="Doka" className="logo-wordmark" />
+          <img src={theme === 'dark' ? dokaWordmarkWhite : dokaWordmarkBlack} alt="Doka" className="logo-wordmark" />
           <div className={`status-pill ${yard.connected ? 'live' : ''}`}>
             <div className="status-dot-mini" />
             {yard.connected ? 'Online' : 'Offline'}
@@ -57,6 +69,22 @@ function App() {
             title="Modo Raio-X"
           >
             Raio-X
+          </button>
+          <button
+            className={`tool-btn`}
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            title="Alternar Tema"
+          >
+            {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+            <span>Tema</span>
+          </button>
+          <button
+            className={`tool-btn ${is2D ? 'active' : ''}`}
+            onClick={() => setIs2D(!is2D)}
+            title="Visão 2D/3D"
+          >
+            {is2D ? <Box size={14} /> : <Map size={14} />}
+            <span>{is2D ? '3D' : '2D'}</span>
           </button>
           <button
             className={`tool-btn ${yard.viewMode === 'heatmap' ? 'active' : ''}`}
@@ -107,6 +135,8 @@ function App() {
           rtgCarriedId={yard.rtgCarriedId}
           searchId={yard.searchId}
           onContainerClick={setSelectedContainer}
+          theme={theme}
+          is2D={is2D}
         />
 
         {/* Floating controls */}
@@ -177,13 +207,13 @@ function App() {
         {/* Empty state */}
         {yard.containers.length === 0 && yard.connected && (
           <div className="empty-overlay">
-            <div className="empty-icon">⚓</div>
+            <div className="empty-icon"><Anchor size={48} strokeWidth={1.5} /></div>
             <p>Pátio vazio — use os controles abaixo para alocar contentores</p>
           </div>
         )}
         {!yard.connected && (
           <div className="empty-overlay">
-            <div className="empty-icon">⚡</div>
+            <div className="empty-icon"><Zap size={48} strokeWidth={1.5} /></div>
             <p>A conectar ao backend...<br />Certifique-se que o servidor está a correr na porta 8000</p>
           </div>
         )}
