@@ -1,39 +1,55 @@
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, type MutableRefObject } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import * as THREE from 'three'
 import type { Container3D } from '../types/api'
+import type { RTGPositionRef } from './RTGCrane'
 
 // Real 20ft container proportions (scaled)
 const CONTAINER_W = 5.8 // X — along bay
 const CONTAINER_H = 2.4 // Y — height
 const CONTAINER_D = 2.2 // Z — along row
 
-const LERP_SPEED = 3.0 // units per second factor
-
 interface Props {
   data: Container3D
   highlight?: boolean
   removing?: boolean
+  xrayMode?: boolean
+  simulatedHours?: number
+  carriedByRtg?: boolean
+  dimmed?: boolean
+  heatmapMode?: boolean
+  rtgPositionRef?: MutableRefObject<RTGPositionRef>
   onClick?: (c: Container3D) => void
 }
 
-export function ContainerBox({ data, highlight, removing, onClick }: Props) {
+export function ContainerBox({ data, highlight, removing, xrayMode, simulatedHours, carriedByRtg, dimmed, heatmapMode, rtgPositionRef, onClick }: Props) {
   const meshRef = useRef<THREE.Mesh>(null)
   const [hovered, setHovered] = useState(false)
   const currentPos = useRef(new THREE.Vector3(data.x, data.y + CONTAINER_H / 2, data.z))
   const targetPos = useRef(new THREE.Vector3(data.x, data.y + CONTAINER_H / 2, data.z))
   const [isAnimating, setIsAnimating] = useState(false)
+  const wasCarried = useRef(false)
 
   // Update target when data changes
   useEffect(() => {
     const newTarget = new THREE.Vector3(data.x, data.y + CONTAINER_H / 2, data.z)
     const dist = targetPos.current.distanceTo(newTarget)
     targetPos.current.copy(newTarget)
-    if (dist > 0.1) {
+
+    // If container was just released by RTG, snap to final position (no animation)
+    if (wasCarried.current && !carriedByRtg) {
+      currentPos.current.copy(newTarget)
+      wasCarried.current = false
+      return
+    }
+    wasCarried.current = !!carriedByRtg
+
+    // Only trigger independent animation if NOT carried by RTG
+    if (dist > 0.1 && !carriedByRtg) {
       setIsAnimating(true)
     }
-  }, [data.x, data.y, data.z])
+  }, [data.x, data.y, data.z, carriedByRtg])
 
   useFrame((_, delta) => {
     if (!meshRef.current) return
@@ -41,8 +57,20 @@ export function ContainerBox({ data, highlight, removing, onClick }: Props) {
     const target = targetPos.current
     const current = currentPos.current
 
+    if (carriedByRtg && rtgPositionRef) {
+      // Follow RTG spreader position exactly
+      const rtg = rtgPositionRef.current
+      current.x = rtg.x
+      current.z = rtg.z
+      // Container hangs below spreader
+      current.y = rtg.y - CONTAINER_H / 2
+      meshRef.current.position.copy(current)
+      setIsAnimating(false)
+      return
+    }
+
     if (isAnimating) {
-      // Animate: lift up, move horizontally, then drop down
+      // Independent animation (gate-in drop, etc.)
       const dist = current.distanceTo(target)
       if (dist < 0.05) {
         current.copy(target)
@@ -52,23 +80,22 @@ export function ContainerBox({ data, highlight, removing, onClick }: Props) {
       }
 
       // Smooth arc movement
-      const liftHeight = 20 // lift above everything
+      const liftHeight = 20
       const dx = target.x - current.x
-      const dy = target.y - current.y
       const dz = target.z - current.z
       const horizDist = Math.sqrt(dx * dx + dz * dz)
 
       if (horizDist > 0.5 && current.y < liftHeight) {
         // Phase 1: lift up
-        current.y = Math.min(current.y + delta * 30, liftHeight)
+        current.y = Math.min(current.y + delta * 12, liftHeight)
       } else if (horizDist > 0.5) {
         // Phase 2: move horizontally
-        const speed = delta * LERP_SPEED * 15
+        const speed = delta * 18
         current.x += (dx / horizDist) * Math.min(speed, horizDist)
         current.z += (dz / horizDist) * Math.min(speed, horizDist)
       } else {
         // Phase 3: drop down
-        current.y += (target.y - current.y) * Math.min(delta * 5, 1)
+        current.y += (target.y - current.y) * Math.min(delta * 10, 1)
         current.x = target.x
         current.z = target.z
       }
@@ -85,9 +112,32 @@ export function ContainerBox({ data, highlight, removing, onClick }: Props) {
     }
   })
 
+  // X-Ray: fade non-ground containers
+  const isXrayed = xrayMode && data.tier > 0
+
+  // Time travel: urgency based on departure
+  let urgency = 0
+  if (simulatedHours && simulatedHours > 0 && data.departure_time) {
+    const simTime = Date.now() + simulatedHours * 3600_000
+    const depTime = new Date(data.departure_time).getTime()
+    const hoursLeft = (depTime - simTime) / 3600_000
+    if (hoursLeft < 0) urgency = 1.0
+    else if (hoursLeft < 6) urgency = 1 - hoursLeft / 6
+  }
+
   const color = new THREE.Color(data.color)
   if (hovered) color.offsetHSL(0, 0, 0.15)
   if (removing) color.offsetHSL(0, 0.3, -0.1)
+  if (urgency > 0) color.lerp(new THREE.Color('#C94F4F'), urgency * 0.7)
+
+  const animOrCarried = isAnimating || carriedByRtg
+  const needsTransparency = highlight || removing || animOrCarried || isXrayed || urgency > 0 || dimmed
+  let finalOpacity = 1
+  if (dimmed) finalOpacity = 0.12
+  else if (isXrayed) finalOpacity = 0.12
+  else if (removing) finalOpacity = 0.5
+  else if (animOrCarried) finalOpacity = 0.9
+  else if (highlight) finalOpacity = 0.85
 
   return (
     <group>
@@ -101,17 +151,29 @@ export function ContainerBox({ data, highlight, removing, onClick }: Props) {
         receiveShadow
       >
         <boxGeometry args={[CONTAINER_W, CONTAINER_H, CONTAINER_D]} />
-        <meshStandardMaterial
-          color={color}
-          metalness={0.3}
-          roughness={0.6}
-          transparent={highlight || removing || isAnimating}
-          opacity={removing ? 0.5 : isAnimating ? 0.9 : highlight ? 0.85 : 1}
-        />
+        {(isXrayed || dimmed || heatmapMode) ? (
+          <meshBasicMaterial
+            color="#84B8D9"
+            wireframe
+            transparent
+            opacity={0.25}
+          />
+        ) : (
+          <meshStandardMaterial
+            color={color}
+            metalness={0.3}
+            roughness={0.6}
+            transparent={needsTransparency}
+            opacity={finalOpacity}
+            depthWrite={!needsTransparency}
+            emissive={urgency > 0.5 ? '#C94F4F' : '#000000'}
+            emissiveIntensity={urgency > 0.5 ? 0.3 : 0}
+          />
+        )}
       </mesh>
 
       {/* Container ribs (visual detail) */}
-      {!isAnimating && [-1.8, -0.6, 0.6, 1.8].map((xOff, i) => (
+      {!animOrCarried && !isXrayed && !dimmed && !heatmapMode && [-1.8, -0.6, 0.6, 1.8].map((xOff, i) => (
         <mesh
           key={i}
           position={[data.x + xOff, data.y + CONTAINER_H / 2, data.z + CONTAINER_D / 2 + 0.01]}
@@ -122,7 +184,7 @@ export function ContainerBox({ data, highlight, removing, onClick }: Props) {
       ))}
 
       {/* ID label on hover */}
-      {hovered && !isAnimating && (
+      {hovered && !animOrCarried && (
         <Html
           position={[data.x, data.y + CONTAINER_H + 1.2, data.z]}
           center
@@ -150,7 +212,7 @@ export function ContainerBox({ data, highlight, removing, onClick }: Props) {
       )}
 
       {/* Animating label */}
-      {isAnimating && (
+      {animOrCarried && (
         <Html
           position={[currentPos.current.x, currentPos.current.y + CONTAINER_H, currentPos.current.z]}
           center
@@ -173,18 +235,51 @@ export function ContainerBox({ data, highlight, removing, onClick }: Props) {
       )}
 
       {/* Highlight glow ring */}
-      {highlight && !isAnimating && (
+      {highlight && !animOrCarried && (
         <mesh position={[data.x, data.y + 0.05, data.z]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[3.2, 3.8, 32]} />
-          <meshBasicMaterial color="#7BB3CC" transparent opacity={0.5} side={THREE.DoubleSide} />
+          <meshBasicMaterial color="#84B8D9" transparent opacity={0.5} side={THREE.DoubleSide} />
         </mesh>
       )}
 
       {/* Removing glow ring (red) */}
-      {removing && !isAnimating && (
+      {removing && !animOrCarried && (
         <mesh position={[data.x, data.y + 0.05, data.z]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[3.2, 3.8, 32]} />
           <meshBasicMaterial color="#C94F4F" transparent opacity={0.6} side={THREE.DoubleSide} />
+        </mesh>
+      )}
+      {/* IMO hazard indicator */}
+      {data.imo_class && !animOrCarried && !isXrayed && (
+        <Html
+          position={[data.x + CONTAINER_W / 2 - 0.5, data.y + CONTAINER_H + 0.3, data.z]}
+          center
+          distanceFactor={100}
+          style={{ pointerEvents: 'none' }}
+        >
+          <div style={{
+            background: '#E8A838',
+            borderRadius: '50%',
+            width: 16,
+            height: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 9,
+            fontWeight: 900,
+            color: '#000',
+            border: '1.5px solid #C94F4F',
+          }}>
+            ⚠
+          </div>
+        </Html>
+      )}
+
+      {/* Reefer indicator */}
+      {data.is_reefer && !animOrCarried && !isXrayed && (
+        <mesh position={[data.x, data.y + CONTAINER_H + 0.15, data.z]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[1.5, 2.0, 6]} />
+          <meshBasicMaterial color="#84B8D9" transparent opacity={0.6} side={THREE.DoubleSide} />
         </mesh>
       )}
     </group>
