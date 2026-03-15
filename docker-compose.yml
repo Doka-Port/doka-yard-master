@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: yard_user
+      POSTGRES_PASSWORD: yard_pass
+      POSTGRES_DB: yard_optimizer
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yard_user -d yard_optimizer"]
+      interval: 5s
+      retries: 5
+volumes:
+  pgdata:

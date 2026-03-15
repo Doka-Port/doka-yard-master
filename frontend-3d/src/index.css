@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Doka Style Guide Palette */
+  --brand-primary: #7BB3CC;
+  --brand-dark: #2E5E73;
+  --brand-light: #A8D4E8;
+  --brand-accent: #5B7F8F;
+  --bg-off-white: #F2F2F2;
+  
+  /* Semantic Colors */
+  --success: #4A9E7F;
+  --warning: #E8A838;
+  --error: #C94F4F;
+  
+  /* Neutrals */
+  --neutral-100: #FFFFFF;
+  --neutral-400: #9BA8B4;
+  --neutral-700: #2D3A42;
+  --neutral-900: #0A0A0A;
+
+  /* Application Mappings */
+  --bg-deep: var(--neutral-900);
+  --bg-primary: #0d1219;
+  --bg-surface: #131a24;
+  --bg-elevated: #192231;
+  --border-subtle: #1c2736;
+  --border-accent: var(--brand-accent);
+  --text-primary: #e2e8f0;
+  --text-secondary: var(--neutral-400);
+  --text-muted: #556677;
+  
+  /* Legacy/Refactor Aliases (to minimize breakage) */
+  --teal: var(--brand-primary);
+  --teal-dim: rgba(123, 179, 204, 0.3);
+  --teal-deep: var(--brand-dark);
+  --cyan: var(--brand-light);
+  --red: var(--error);
+  --amber: var(--warning);
+  
+  /* Typography */
+  --font-display: 'Geist', 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+}
