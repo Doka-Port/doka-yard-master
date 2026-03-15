@@ -76,6 +76,8 @@ class ContainerState(BaseModel):
     weight_class: str
     departure_time: str
     flow_type: str
+    is_reefer: bool = False
+    imo_class: Optional[str] = None
 
 
 class YardStateResponse(BaseModel):
@@ -85,6 +87,7 @@ class YardStateResponse(BaseModel):
     total_containers: int
     containers: list[ContainerState]
     heatmap: list[list[float]]
+    reefer_slots: list[list[int]] = []
 
 
 # ─── Gate-In (3D-compatible) ───
@@ -98,6 +101,8 @@ class GateInRequest(BaseModel):
     flow_type: str = Field(..., pattern="^(IMPORT|EXPORT)$", examples=["EXPORT"])
     rtg_position: Optional[list[int]] = Field(None, examples=[[12, 3]])
     block_name: str = Field("A1", examples=["A1"])
+    is_reefer: bool = Field(False, examples=[False])
+    imo_class: Optional[str] = Field(None, examples=[None])
 
     model_config = {"json_schema_extra": {"examples": [{"container_id": 1042, "weight_class": "HEAVY", "weight_kg": 28000, "departure_time": "2026-03-18T14:00:00Z", "flow_type": "EXPORT", "rtg_position": [12, 3], "block_name": "A1"}]}}
 
@@ -122,6 +127,8 @@ class Container3D(BaseModel):
     weight_kg: int
     flow_type: str
     departure_time: str
+    is_reefer: bool = False
+    imo_class: Optional[str] = None
     opacity: float = 1.0
 
 

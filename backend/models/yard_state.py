@@ -20,6 +20,8 @@ class ContainerInfo:
     weight_kg: int
     departure_time: datetime
     flow_type: str
+    is_reefer: bool = False
+    imo_class: str | None = None
     position: tuple[int, int, int] | None = None
     arrival_time: datetime | None = None
 
@@ -35,6 +37,7 @@ class YardState:
         self.max_tiers = max_tiers
         self.yard_matrix: np.ndarray = np.zeros((num_bays, num_rows, max_tiers), dtype=int)
         self.container_registry: dict[int, ContainerInfo] = {}
+        self.reefer_slots: set[tuple[int, int]] = set()  # (bay, row) pairs with reefer outlets
 
     @property
     def total_capacity(self) -> int:
@@ -55,11 +58,18 @@ class YardState:
                 return tier
         return None
 
-    def get_valid_slots(self) -> list[tuple[int, int, int]]:
-        """Lista todos os slots válidos (próximo tier livre em cada bay/row)."""
+    def get_valid_slots(self, excluded_columns: set[tuple[int, int]] | None = None) -> list[tuple[int, int, int]]:
+        """Lista todos os slots válidos (próximo tier livre em cada bay/row).
+
+        Args:
+            excluded_columns: set de (bay, row) a excluir (usado no reshuffle para
+                              não colocar contentores de volta na coluna do alvo).
+        """
         slots = []
         for bay in range(self.num_bays):
             for row in range(self.num_rows):
+                if excluded_columns and (bay, row) in excluded_columns:
+                    continue
                 tier = self.get_next_free_tier(bay, row)
                 if tier is not None:
                     slots.append((bay, row, tier))
@@ -129,6 +139,8 @@ class YardState:
                 weight_kg=c.weight_kg,
                 departure_time=c.departure_time,
                 flow_type=c.flow_type,
+                is_reefer=getattr(c, 'is_reefer', False) or False,
+                imo_class=getattr(c, 'imo_class', None),
                 position=(c.bay, c.row, c.tier),
                 arrival_time=c.arrival_time,
             )

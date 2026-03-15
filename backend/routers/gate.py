@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 
 from backend.database import get_session
 from sqlalchemy import select, update
@@ -26,7 +27,7 @@ SPACING_Z = 2.8   # ~2.44m de largura + gap
 WEIGHT_COLORS = {
     "HEAVY":  "#C94F4F",  # Doka Error Red
     "MEDIUM": "#E8A838",  # Doka Warning Gold
-    "LIGHT":  "#7BB3CC",  # Doka Brand Blue
+    "LIGHT":  "#84B8D9",  # Doka Brand Blue
 }
 
 
@@ -46,6 +47,8 @@ def _container_to_3d(cid: int, info: ContainerInfo, highlight: bool = False) -> 
         weight_kg=info.weight_kg,
         flow_type=info.flow_type,
         departure_time=info.departure_time.isoformat() if info.departure_time else "",
+        is_reefer=info.is_reefer,
+        imo_class=info.imo_class,
         opacity=1.0 if not highlight else 0.85,
     )
 
@@ -93,6 +96,8 @@ async def gate_in(req: GateInRequest, session: AsyncSession = Depends(get_sessio
         weight_kg=req.weight_kg,
         departure_time=dep,
         flow_type=req.flow_type,
+        is_reefer=req.is_reefer,
+        imo_class=req.imo_class,
         arrival_time=now,
     )
 
@@ -112,6 +117,8 @@ async def gate_in(req: GateInRequest, session: AsyncSession = Depends(get_sessio
         weight_kg=req.weight_kg,
         departure_time=dep,
         flow_type=req.flow_type,
+        is_reefer=req.is_reefer,
+        imo_class=req.imo_class,
         bay=result.bay,
         row=result.row,
         tier=result.tier,
@@ -135,7 +142,11 @@ async def gate_in(req: GateInRequest, session: AsyncSession = Depends(get_sessio
         computation_ms=result.computation_ms,
     )
     session.add(log_entry)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(status_code=400, detail=f"Container {req.container_id} já existe no banco de dados.")
 
     # ─── Atualizar cache ───
     yard.place_container(container, result.bay, result.row, result.tier)
@@ -240,6 +251,9 @@ async def retirar_container(req: RetirarRequest, session: AsyncSession = Depends
         containers_above.append(cid)
 
     # Reshuffle: mover cada contentor acima para nova posição
+    # Excluir a coluna do contentor alvo para não bloquear a retirada
+    excluded = {(bay, row)}
+
     for cid in containers_above:
         above_info = yard.container_registry.get(cid)
         if not above_info or not above_info.position:
@@ -250,8 +264,8 @@ async def retirar_container(req: RetirarRequest, session: AsyncSession = Depends
         # Remove do cache temporariamente
         yard.remove_container(cid)
 
-        # Realoca usando o otimizador
-        result = allocate(yard, above_info, None, use_pso=True)
+        # Realoca usando o otimizador (excluindo a coluna do alvo)
+        result = allocate(yard, above_info, None, use_pso=True, excluded_columns=excluded)
         if result is None:
             # Sem espaço — colocar de volta e abortar
             yard.place_container(above_info, old_pos[0], old_pos[1], old_pos[2])

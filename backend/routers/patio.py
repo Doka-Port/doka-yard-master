@@ -3,11 +3,11 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.database import get_session
-from backend.models.db_models import Block, Container
+from backend.models.db_models import AllocationLog, Block, Container
 from backend.models.schemas import InitializeRequest, InitializeResponse, YardStateResponse, ContainerState
 from backend.models.yard_state import YardState
 
@@ -32,9 +32,9 @@ async def inicializar_patio(req: InitializeRequest, session: AsyncSession = Depe
     block = result.scalar_one_or_none()
 
     if block:
-        # Reset: remover contentores activos
+        # Reset: remover todos os contentores (activos e inactivos)
         await session.execute(
-            delete(Container).where(Container.block_id == block.id, Container.is_active == True)
+            delete(Container).where(Container.block_id == block.id)
         )
         block.num_bays = req.num_bays
         block.num_rows = req.num_rows
@@ -59,6 +59,11 @@ async def inicializar_patio(req: InitializeRequest, session: AsyncSession = Depe
         num_rows=block.num_rows,
         max_tiers=block.max_tiers,
     )
+    # Setup reefer slots: first 2 rows for bays 0-4 (30 slots with reefer outlets)
+    for b in range(min(5, state.num_bays)):
+        for r in range(min(2, state.num_rows)):
+            state.reefer_slots.add((b, r))
+
     yard_states[block.block_name] = state
 
     logger.info(f"Pátio '{block.block_name}' inicializado: {req.num_bays}×{req.num_rows}×{req.max_tiers}")
@@ -86,6 +91,8 @@ async def estado_patio(block_name: str = "A1"):
                 weight_class=info.weight_class,
                 departure_time=info.departure_time.isoformat(),
                 flow_type=info.flow_type,
+                is_reefer=info.is_reefer,
+                imo_class=info.imo_class,
             ))
 
     return YardStateResponse(
@@ -95,4 +102,46 @@ async def estado_patio(block_name: str = "A1"):
         total_containers=yard.current_occupancy,
         containers=containers,
         heatmap=yard.get_heatmap(),
+        reefer_slots=[list(s) for s in yard.reefer_slots],
     )
+
+
+@router.get("/analytics")
+async def analytics(block_name: str = "A1", session: AsyncSession = Depends(get_session)):
+    """Métricas de eficiência para o dashboard."""
+    yard = get_yard(block_name)
+
+    # Buscar bloco
+    result = await session.execute(select(Block).where(Block.block_name == block_name))
+    block = result.scalar_one_or_none()
+    if not block:
+        raise HTTPException(status_code=404, detail="Bloco não encontrado")
+
+    # Métricas de alocação
+    alloc_result = await session.execute(
+        select(
+            func.count(AllocationLog.id).label("total_allocations"),
+            func.avg(AllocationLog.cost_score).label("avg_cost"),
+            func.sum(AllocationLog.computation_ms).label("total_ms"),
+        ).where(AllocationLog.block_id == block.id)
+    )
+    row = alloc_result.one()
+
+    # Contagem de remoções (containers inativos)
+    removed_result = await session.execute(
+        select(func.count(Container.id)).where(
+            Container.block_id == block.id,
+            Container.is_active == False,  # noqa: E712
+        )
+    )
+    total_removals = removed_result.scalar() or 0
+
+    return {
+        "total_allocations": row.total_allocations or 0,
+        "avg_cost": round(row.avg_cost or 0, 4),
+        "total_computation_ms": row.total_ms or 0,
+        "total_removals": total_removals,
+        "current_occupancy": yard.current_occupancy,
+        "total_capacity": yard.total_capacity,
+        "occupancy_rate": round(yard.occupancy_rate, 4),
+    }
