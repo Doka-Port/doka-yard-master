@@ -13,10 +13,13 @@ from backend.models.yard_state import YardState, ContainerInfo
 
 WEIGHT_MAP = {"LIGHT": 1, "MEDIUM": 2, "HEAVY": 3}
 
-# ─── Pesos agressivos para o demo (Cost = Digging*100 + Weight*10 + Distance*1) ───
-PENALTY_DIGGING = 100.0
-PENALTY_WEIGHT = 10.0
-PENALTY_DISTANCE = 1.0
+# ─── Pesos da função de custo (derivados do config, escalados) ───
+# Escala: normaliza os pesos de config (somam 1.0) para magnitudes com hierarquia clara
+_SCALE = 100.0
+PENALTY_DIGGING = WEIGHT_RESHUFFLE * _SCALE * 2    # 0.50 * 200 = 100.0
+PENALTY_WEIGHT = WEIGHT_GRAVITY * _SCALE * 0.4     # 0.25 * 40  = 10.0
+PENALTY_DISTANCE = WEIGHT_DISTANCE * _SCALE * 0.067  # 0.15 * 6.7 = ~1.0
+PENALTY_GROUPING = WEIGHT_GROUPING * _SCALE * 0.5   # 0.10 * 50  = 5.0
 
 
 def calc_reshuffle_cost(
@@ -108,6 +111,7 @@ def calculate_cost(
         PENALTY_DIGGING * c_reshuffle
         + PENALTY_WEIGHT * c_weight
         + PENALTY_DISTANCE * c_distance
+        + PENALTY_GROUPING * c_grouping
     )
 
     breakdown = {
@@ -118,6 +122,7 @@ def calculate_cost(
         "rtg_distance": round(c_distance, 4),
         "distance_weighted": round(PENALTY_DISTANCE * c_distance, 2),
         "grouping_penalty": round(c_grouping, 4),
+        "grouping_weighted": round(PENALTY_GROUPING * c_grouping, 2),
     }
 
     return round(total, 4), breakdown

@@ -16,6 +16,18 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
+class PSOIterationData:
+    """Dados de uma iteração PSO para visualização."""
+    iteration: int
+    particles: list[list[float]]  # [[bay, row], ...] posições contínuas
+    particles_discrete: list[list[int]]  # [[bay, row, tier], ...] snapped
+    particle_scores: list[float]
+    g_best_position: list[float]
+    g_best_score: float
+    inertia: float
+
+
+@dataclass
 class AllocationResult:
     bay: int
     row: int
@@ -25,6 +37,7 @@ class AllocationResult:
     alternatives: list[dict]
     optimizer_type: str
     computation_ms: int
+    pso_history: list[PSOIterationData] | None = None
 
 
 class StackingOptimizer:
@@ -146,10 +159,15 @@ class StackingOptimizer:
 
         # Cache de scores já calculados (evita recálculos)
         score_cache: dict[tuple[int, int, int], tuple[float, dict]] = {}
+        pso_history: list[PSOIterationData] = []
 
         for iteration in range(self.n_iterations):
-            # Inércia decrescente: começa exploratório, termina exploitativo
-            w = self.w * (1.0 - iteration / self.n_iterations)
+            # Inércia decrescente: decai de w_max (0.7) até w_min (0.4)
+            w_min = 0.4
+            w = self.w - (self.w - w_min) * (iteration / (self.n_iterations - 1))
+
+            iter_discrete: list[list[int]] = []
+            iter_scores: list[float] = []
 
             for i in range(n_particles):
                 # Snap para o candidato válido mais próximo (Manhattan distance)
@@ -166,6 +184,8 @@ class StackingOptimizer:
                     score_cache[discrete] = (cost, breakdown)
 
                 cost, breakdown = score_cache[discrete]
+                iter_discrete.append(list(discrete))
+                iter_scores.append(round(cost, 4))
 
                 # Atualizar melhor pessoal
                 if cost < p_best_scores[i]:
@@ -178,6 +198,17 @@ class StackingOptimizer:
                     g_best_pos = positions[i].copy()
                     g_best_discrete = discrete
                     g_best_breakdown = breakdown
+
+            # Registrar dados da iteração para visualização
+            pso_history.append(PSOIterationData(
+                iteration=iteration,
+                particles=positions.round(2).tolist(),
+                particles_discrete=iter_discrete,
+                particle_scores=iter_scores,
+                g_best_position=[round(g_best_pos[0], 2), round(g_best_pos[1], 2)],
+                g_best_score=round(g_best_score, 4),
+                inertia=round(w, 4),
+            ))
 
             # Atualizar velocidades e posições (equações canónicas do PSO)
             r1 = self.rng.random((n_particles, 2))
@@ -216,6 +247,7 @@ class StackingOptimizer:
             alternatives=alternatives,
             optimizer_type="pso",
             computation_ms=elapsed_ms,
+            pso_history=pso_history,
         )
 
 
