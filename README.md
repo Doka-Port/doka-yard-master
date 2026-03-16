@@ -32,15 +32,6 @@
 
 ---
 
-## 🌐 Acesso à Aplicação
-
-A demonstração interativa do YMS está disponível em produção através do link abaixo:
-
-> **[Acessar a Demo 🚀](https://seu-link-de-deploy-aqui.com)**
-
-
----
-
 ## 📖 Descrição
 
 A plataforma principal da **Doka Yard Intelligence** é uma solução completa em *YMS (Yard Management System)*, focada em fornecer visibilidade espacial e analítica das operações portuárias em tempo real.\n\nEste repositório (**doka-yard-master**) contém a demonstração oficial (demo) da aplicação, dividida em um back-end robusto focado em otimização de infraestrutura e um front-end imersivo com renderização gráfica tridimensional.
