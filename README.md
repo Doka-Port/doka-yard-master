@@ -1,7 +1,7 @@
 # 🚢 Doka Yard Intelligence — Plataforma (Demo)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Doka-Port/doka-yard-lp/main/public/LogoWhite.svg" alt="Doka Yard Intelligence Logo" width="120" style="background:#111;border-radius:12px;padding:16px;" />
+  <img src="./frontend-3d/public/LogoWhite.svg" alt="Doka Yard Intelligence Logo" width="120" style="background:#111;border-radius:12px;padding:16px;" />
 </p>
 
 <p align="center">
